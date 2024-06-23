@@ -1,0 +1,135 @@
+Reference:
+https://xds.mr.mpg.de/html_doc/downloading.html
+https://wiki.uni-konstanz.de/xds/index.php/Tutorial(First_Steps)
+
+Current Problem: Install hdf5
+Reference: 
+1. https://zenodo.org/records/2412270
+2. https://github.com/DiamondLightSource/durin
+3. https://www.hdfgroup.org/downloads/hdf5/source-code/?1718536075
+
+Jump to install and example
+make sure xds_par work
+
+Environment set up: three module require
+hdf5, gcc, cmake ← Lackof hdf5
+
+Process 1:
+Download hdf5-1.14.4-2.tar.gz from link 3
+cd /hdf5_dir (Suppose this is where you install it)
+mkdir build
+cd build
+export CFLAGS=-fPIC
+../configure --enable-threadsafe --enable-deprecated-symbols --enable-hl --enable-unsupported
+(Output:https://gist.github.com/zauser519/697702d8bb0f924b3c7ae6000b68c136)
+make -j 8  ← a Problem now. Cannot make a file called h5cc for the installation for process 1
+(Error:https://gist.github.com/zauser519/433f608812616a99383c2a073205fe81)
+make check
+make install
+
+Process 2:
+git clone https://github.com/DiamondLightSource/durin.git 
+cd /Home_Directory/durin
+PATH=/Home_Directory/hdf5/hdf5/build/bin:$PATH
+make
+
+Process 3: XDS
+cd /Home_Directory/XDS_example
+wget https://zenodo.org/record/2412270/files/thaumatin_9_1_master.h5
+wget https://zenodo.org/record/2412270/files/thaumatin_9_1_000001.h5
+wget https://zenodo.org/record/2412270/files/thaumatin_9_1_000002.h5
+wget https://zenodo.org/record/2412270/files/thaumatin_9_1_000003.h5
+wget https://zenodo.org/record/2412270/files/thaumatin_9_1_meta.h5
+
+nano XDS.INP
+Add following contents:
+DETECTOR=PILATUS MINIMUM_VALID_PIXEL_VALUE=0 OVERLOAD=65535
+SENSOR_THICKNESS= 0.450
+DIRECTION_OF_DETECTOR_X-AXIS= 1.00000 0.00000 0.00000
+DIRECTION_OF_DETECTOR_Y-AXIS= 0.00000 1.00000 0.00000
+NX=4148 NY=4362 QX=0.0750 QY=0.0750
+DETECTOR_DISTANCE= 200.000000
+ORGX= 2214.85 ORGY= 2301.00
+ROTATION_AXIS= 1.00000 0.00000 0.00000
+STARTING_ANGLE= 0.000
+OSCILLATION_RANGE= 0.150
+X-RAY_WAVELENGTH= 0.97950
+INCIDENT_BEAM_DIRECTION= -0.000 -0.000 1.021
+FRACTION_OF_POLARIZATION= 0.999
+POLARIZATION_PLANE_NORMAL= 0.000 1.000 0.000
+NAME_TEMPLATE_OF_DATA_FRAMES= /Home_Directory/XDS_example/thaumatin_9_1_??????.h5
+TRUSTED_REGION= 0.0 1.41
+DATA_RANGE= 1 3600
+JOB=XYCORR INIT COLSPOT IDXREF DEFPIX INTEGRATE CORRECT
+LIB=/Home_Directory/XDS_example/durin-plugin.so
+
+cp /Home_Directory/durin/build/durin-plugin.so /Home_Directory/XDS_example/
+LIB=/Home_Directory/XDS_example/durin-plugin.so
+xds_par
+
+Current Status: Success
+Output: 
+
+
+Current Problem: Can no find data for program execution (Update: 2024/6/7)
+The database that I can found are all unavailable
+Attempted:
+XDS Website
+wget http://xds.mr.mpg.de/examples/tutorial_images.tar.gz
+
+Stanford Synchrotron Radiation Lightsource (SSRL)
+wget https://smb.slac.stanford.edu/smb/macromolecular_crystallography/tutorials/xds/data.tar.gz
+
+The European Molecular Biology Laboratory (EMBL):
+wget ftp://ftp.embl.de/pub/divisions/mxfacility/xds/Glucoamylase_Apo.tar.gz
+→ Other attempts:
+Use XDSGUI → the Same issue
+Check for Untrusted Areas (UNTRUSTED_RECTANGLE=0 100 200 300) → Same issue
+→ If successfully find one: Go to Install part
+
+
+Install:
+
+Download and install this package: https://xds.mr.mpg.de/XDS-INTEL64_Linux_x86_64.tar.gz
+Add the folder to the Path:
+/Home_Directory/XDS/XDS-INTEL64_Linux_x86_64
+
+Example:
+Download the template from: https://xds.mr.mpg.de/html_doc/xds_prepare.html
+Download XDS-MARCCD.INP from the above page, rename it to xds.inp
+Home directory: /Home_Directory
+XDS.INP file: /Home_Directory/XDS/image_folder
+
+# Create workspace:
+mkdir -p /Home_Directory/xds_work 
+cd /Home_Directory/xds_work 
+
+# Create image path: 
+ln -s /Home_Directory/XDS/image_folder/images images
+# Check if work: 
+ls images 
+
+# Copy XDS.INP to workspace
+cp /Home_Directory/XDS/image_folder/XDS.INP /Home_Directory/xds_work/ 
+
+# Revise XDS.INP to ensure parameters correct
+1. Make sure the data directory is correct: NAME_TEMPLATE_OF_DATA_FRAMES=/Home_Directory/XDS/image_folder/tutorial_????.img
+
+# run XDS 
+cd /Home_Directory/xds_work 
+xds → Fail
+
+Output:
+***** XDS ***** (VERSION Jun 30, 2023  BUILT=20230630)  27-May-2024
+ Author: Wolfgang Kabsch
+ Copy licensed until 31-Aug-2024 to
+  academic users for non-commercial applications
+ No redistribution.
+
+
+ !!! ERROR !!! Data image does not exist: /Home_Directory/XDS/image_folder/image/tutorial_0011.img
+
+Attempts:
+Use absolute path instead → Fail
+No database? → Download an sample image → No use
+Only output 1 image: DATA_RANGE=11 11 → Fail
